@@ -55,7 +55,7 @@ async def process_order(callback: types.CallbackQuery, callback_data: MenuCallBa
         f"📥 <b>Новый заказ</b>\n"
         f"👤 <b>{user.full_name}</b> (@{user.username or 'без username'} | <code>{user.id}</code>)\n\n"
         f"{summary}\n\n"
-        f"💰 Итого: <b>{total}</b> сум"
+        f"💰 Итого: <b>{format(int(total), ',').replace(',', ' ')}</b> сум"
     )
 
     ADMIN_CHAT_ID = os.getenv("ADMIN_CHAT_ID")

@@ -51,6 +51,7 @@ def pages(paginator: Paginator):
 async def products(session, level, category, page):
     products = await orm_get_products(session, category_id=category)
 
+    # summary = "\n".join([f"— {c.product.name} x{c.quantity}" for c in carts])
     paginator = Paginator(products, page=page)
     product = paginator.get_page()[0]
 
@@ -59,7 +60,7 @@ async def products(session, level, category, page):
         caption=(
             f"<strong>{product.name}</strong>\n"
             f"{product.description}\n"
-            f"Стоимость: {product.price:.3f} сум\n"
+            f"Стоимость: {format(int(product.price), ',').replace(',', ' ')} сум\n"
             f"<strong>Товар {paginator.page} из {paginator.pages}</strong>"
         ),
     )
@@ -108,6 +109,7 @@ async def carts(session, level, menu_name, page, user_id, product_id):
         paginator = Paginator(carts, page=page)
         cart = paginator.get_page()[0]
 
+        summary = "\n".join([f"— {c.product.name} x{c.quantity}" for c in carts])
         cart_price = float(cart.quantity) * float(cart.product.price)
         total_price = sum(float(c.quantity) * float(c.product.price) for c in carts)
 
@@ -115,9 +117,11 @@ async def carts(session, level, menu_name, page, user_id, product_id):
             media=cart.product.image,
             caption=(
                 f"<strong>{cart.product.name}</strong>\n"
-                f"{cart.product.price:.3f} сум x {cart.quantity} = {cart_price:.3f} сум\n"
-                f"Товар {paginator.page} из {paginator.pages} в корзине.\n"
-                f"Общая стоимость товаров в корзине {total_price:.3f} сум"
+                f"{format(int(cart.product.price), ',').replace(',', ' ')} сум x {cart.quantity} = {format(int(cart_price), ',').replace(',', ' ')} сум\n"
+                f"Товар {paginator.page} из {paginator.pages} в корзине\n"
+                f"Общая стоимость товаров в корзине {format(int(total_price), ',').replace(',', ' ')} сум\n"
+                f"<strong>Список всех товаров:</strong>\n"
+                f"{summary}\n"
             ),
         )
 

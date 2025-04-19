@@ -1,3 +1,7 @@
+# text = "12,000"
+# formatted = text.replace(",", " ")
+# print(formatted)  # 👉 "12 000"
+
 import asyncio
 import os
 

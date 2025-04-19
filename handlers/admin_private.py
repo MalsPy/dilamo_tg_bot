@@ -54,7 +54,7 @@ async def starring_at_product(callback: types.CallbackQuery, session: AsyncSessi
         await callback.message.answer_photo(
             product.image,
             caption=f"<strong>{product.name}\
-                    </strong>\n{product.description}\nСтоимость: {round(product.price, 2)}",
+                    </strong>\n{product.description}\nСтоимость: {format(int(product.price), ',').replace(',', ' ')} сум",
             reply_markup=get_callback_btns(
                 btns={
                     "Удалить": f"delete_{product.id}",
@@ -91,23 +91,30 @@ async def add_image2(message: types.Message, state: FSMContext, session: AsyncSe
 
 # Добавляем/изменяем изображение в таблице (там уже есть записанные страницы по именам:
 # main, catalog, cart(для пустой корзины), about, payment, shipping
+# Добавляем/изменяем изображение в таблице
 @admin_router.message(AddBanner.image, F.photo)
 async def add_banner(message: types.Message, state: FSMContext, session: AsyncSession):
     image_id = message.photo[-1].file_id
     for_page = message.caption.strip()
     pages_names = [page.name for page in await orm_get_info_pages(session)]
     if for_page not in pages_names:
-        await message.answer(f"Введите нормальное название страницы, например:\
-                         \n{', '.join(pages_names)}")
+        await message.answer(f"Введите нормальное название страницы, например:\n{', '.join(pages_names)}")
         return
-    await orm_change_banner_image(session, for_page, image_id,)
-    await message.answer("Баннер добавлен/изменен.")
+    await orm_change_banner_image(session, for_page, image_id)
+    await message.answer("✅ Баннер добавлен/изменен.")
     await state.clear()
 
-# ловим некоррекный ввод
+# Обработка команды отмены
+@admin_router.message(AddBanner.image, F.text.casefold() == "отмена")
+@admin_router.message(AddBanner.image, F.text.casefold() == "/отмена")
+async def cancel_add_banner(message: types.Message, state: FSMContext):
+    await state.clear()
+    await message.answer("❌ Действие отменено.")
+
+# Ловим некорректный ввод
 @admin_router.message(AddBanner.image)
 async def add_banner2(message: types.Message, state: FSMContext):
-    await message.answer("Отправьте фото баннера или отмена")
+    await message.answer("📷 Отправьте фото баннера или напишите <b>отмена</b>", parse_mode="HTML")
 
 #########################################################################################
 
@@ -172,7 +179,7 @@ async def cancel_handler(message: types.Message, state: FSMContext) -> None:
     if AddProduct.product_for_change:
         AddProduct.product_for_change = None
     await state.clear()
-    await message.answer("Действия отменены", reply_markup=ADMIN_KB)
+    await message.answer("❌ Действие отменено.", reply_markup=ADMIN_KB)
 
 
 # Вернутся на шаг назад (на прошлое состояние)
@@ -296,7 +303,7 @@ async def add_image(message: types.Message, state: FSMContext, session: AsyncSes
     elif message.photo:
         await state.update_data(image=message.photo[-1].file_id)
     else:
-        await message.answer("Отправьте фото пищи")
+        await message.answer("Отправьте фото")
         return
     data = await state.get_data()
     try:
